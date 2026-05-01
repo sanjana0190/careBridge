@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% from "_plan.html" import render_plan %}
+{% block title %}Final plan — {{ patient.first }} {{ patient.last }}{% endblock %}
+{% block content %}
+  <h1>Final plan · {{ patient.first }} {{ patient.last }}</h1>
+  <p class="subtitle">
+    Saved to <code>{{ artifact_path }}</code> ·
+    {{ conversation|length }} chat turn{% if conversation|length != 1 %}s{% endif %} ·
+    <a href="{{ url_for('index') }}">Run another patient →</a>
+  </p>
+
+  <div class="grid">
+    <section>
+      <h2>Conversation transcript</h2>
+      {% if conversation %}
+        <div class="chat-history">
+          {% for turn in conversation %}
+            <div class="chat-turn">
+              <div class="chat-msg coord">
+                <span class="who">Coordinator · turn {{ loop.index }}</span>
+                <div class="text">{{ turn.coordinator }}</div>
+              </div>
+              <div class="chat-msg agent">
+                <span class="who">Agent</span>
+                <div class="text">{{ turn.agent_response or "(plan revised)" }}</div>
+                {% if turn.personalization_notes %}
+                  <ul class="changes">
+                    {% for n in turn.personalization_notes %}<li>{{ n }}</li>{% endfor %}
+                  </ul>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="subtitle">No coordinator turns — initial plan saved as-is.</p>
+      {% endif %}
+    </section>
+
+    <section>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>Final plan</h2>
+        <button id="download-pdf-btn" class="download-btn">
+          <svg style="width:16px;height:16px;margin-right:6px;vertical-align:-3px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Download PDF
+        </button>
+      </div>
+      <div id="plan-to-download">
+        {{ render_plan(final_plan) }}
+      </div>
+    </section>
+  </div>
+
+  <section class="trace">
+    <h2>Agent interaction log</h2>
+    <pre>{% for line in log %}{{ line }}
+{% endfor %}</pre>
+  </section>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script>
+    document.getElementById('download-pdf-btn').addEventListener('click', function() {
+      // Add a special class during print if needed for styling tweaks
+      const element = document.getElementById('plan-to-download');
+      
+      const opt = {
+        margin:       0.5,
+        filename:     'Care_Plan_{{ patient.first }}_{{ patient.last }}.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+      
+      html2pdf().set(opt).from(element).save();
+    });
+  </script>
+{% endblock %}

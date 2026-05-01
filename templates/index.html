@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}careBridge — Run Agent{% endblock %}
+{% block content %}
+  <section class="hero">
+    <h1><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:36px;height:36px;vertical-align:-6px;display:inline-block;margin-right:8px;color:var(--primary);"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>Generate a Barrier-Informed Care Plan</h1>
+    <p class="subtitle">
+      Enter a patient name or ID to synthesize data and generate a holistic plan. <br>
+      Need a patient? <a href="{{ url_for('patients') }}" style="color:var(--primary); font-weight:600; text-decoration:none;">Browse directory &rarr;</a>
+    </p>
+  </section>
+
+  {% if error %}
+    <div class="alert">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('run') }}" class="run-form">
+    <label for="name">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;vertical-align:-3px;margin-right:4px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      Patient Name or ID
+    </label>
+    <input
+      type="text"
+      id="name"
+      name="name"
+      placeholder="e.g. Lindsay Brekke"
+      value="{{ prefill or '' }}"
+      autofocus
+      required
+    >
+    <button type="submit" class="run-btn" style="padding: 1rem; font-size: 1.1rem; width: 100%; margin-top: 1rem;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;margin-right:4px;vertical-align:-4px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+      Run Agent Synthesis
+    </button>
+    <p class="hint">
+      <strong>Pro Tip:</strong> Try: <code>lindsay brekke</code>, <code>soledad white</code>, or any UUID from the directory.
+    </p>
+  </form>
+{% endblock %}

@@ -184,12 +184,12 @@ def run_agent(user_message: str) -> None:
 
 if __name__ == "__main__":
     # Prompt 1: Preventable Visit Detector
-    run_agent(
-        "Find the patients most at risk of a preventable ED visit. "
-        "Consider both clinical factors (chronic conditions, no care plan) "
-        "and social factors (SDOH, financial barriers). "
-        "Rank the top 5 and explain why each one is high risk."
-    )
+    # run_agent(
+    #     "Find the patients most at risk of a preventable ED visit. "
+    #     "Consider both clinical factors (chronic conditions, no care plan) "
+    #     "and social factors (SDOH, financial barriers). "
+    #     "Rank the top 5 and explain why each one is high risk."
+    # )
 
     # Prompt 2: Cost Explainer
     # run_agent(
@@ -199,8 +199,8 @@ if __name__ == "__main__":
     # )
 
     # Prompt 3: Care Barrier Agent
-    # run_agent(
-    #     "Pull a full profile for Lindsay Brekke. "
-    #     "What clinical and social barriers are preventing her from getting consistent care? "
-    #     "Generate a barrier-informed care plan for me to review."
-    # )
+    run_agent(
+        "Pull a full profile for Lindsay Brekke. "
+        "What clinical and social barriers are preventing her from getting consistent care? "
+        "Generate a barrier-informed care plan for me to review."
+    )

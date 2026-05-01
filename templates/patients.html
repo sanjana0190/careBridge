@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}careBridge — Patients{% endblock %}
+{% block content %}
+  <h1 style="color: var(--primary); display: flex; align-items: center; gap: 0.5rem; justify-content: center; margin-top: 1rem;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+    Patient Directory
+  </h1>
+  <p class="subtitle" style="margin-bottom: 2rem; text-align: center;">
+    Search for a patient or copy a UUID to run the AI. All data is synthetically generated context.
+  </p>
+
+  <section>
+    <div style="max-width: 500px; margin: 0 auto 1.5rem auto; display:flex;">
+      <input type="text" id="filter" class="filter-input" placeholder="Search by name, ID, or metrics..." onkeyup="filterTable()" style="width:100%;">
+    </div>
+
+    <div style="overflow-x: auto;">
+      <table class="patients" id="ptable">
+        <thead>
+          <tr>
+            <th>Patient UUID</th>
+            <th>Name</th>
+            <th class="num" title="ED Visits">ED</th>
+            <th class="num" title="Chronic Conditions">Conditions</th>
+            <th class="num" title="Total Debt">Debt</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in patients %}
+            <tr>
+              <td>
+                <code style="margin-right: 0.5rem;">{{ p.id }}</code>
+                <button type="button" class="copy-btn" onclick="navigator.clipboard.writeText('{{ p.id }}')" title="Copy ID">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                </button>
+              </td>
+              <td style="font-weight: 500; font-size: 1rem;">{{ p.first }} {{ p.last }}</td>
+              <td class="num {{ 'warn' if p.ed_visits and p.ed_visits > 2 }}">{{ p.ed_visits or 0 }}</td>
+              <td class="num {{ 'warn' if p.chronic_condition_count and p.chronic_condition_count > 3 }}">{{ p.chronic_condition_count or 0 }}</td>
+              <td class="num {{ 'warn' if p.total_outstanding and p.total_outstanding > 1000 }}">${{ '{:,.0f}'.format(p.total_outstanding or 0) }}</td>
+              <td style="text-align: right;">
+                <form method="post" action="{{ url_for('run') }}" class="inline">
+                  <input type="hidden" name="name" value="{{ p.id }}">
+                  <button type="submit" class="run-btn" style="border-radius: 9999px;">
+                     Generate Plan &rarr;
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <script>
+    function filterTable() {
+      const input = document.getElementById("filter");
+      const filter = input.value.toLowerCase();
+      const table = document.getElementById("ptable");
+      const tr = table.getElementsByTagName("tr");
+      for (let i = 1; i < tr.length; i++) {
+        let text = tr[i].textContent || tr[i].innerText;
+        tr[i].style.display = text.toLowerCase().indexOf(filter) > -1 ? "" : "none";
+      }
+    }
+  </script>
+{% endblock %}

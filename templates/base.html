@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}careBridge{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header>
+    <a href="{{ url_for('index') }}" class="brand">careBridge</a>
+    <nav>
+      <a href="{{ url_for('index') }}">Run agent</a>
+      <a href="{{ url_for('patients') }}">All patients</a>
+    </nav>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  <footer>Barrier-informed care planning · Gemini 3 Flash Preview · D1 read-only</footer>
+</body>
+</html>

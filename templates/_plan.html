@@ -1,0 +1,43 @@
+{% macro render_plan(plan) %}
+  {% if plan.patient_summary %}
+    <p class="plan-summary">{{ plan.patient_summary }}</p>
+  {% endif %}
+
+  {% for bucket, label in [
+    ('clinical_actions', 'Clinical actions'),
+    ('social_actions', 'Social actions'),
+    ('financial_actions', 'Financial actions'),
+  ] %}
+    {% set items = plan[bucket] or [] %}
+    {% if items %}
+      <h3>{{ label }}</h3>
+      <ul class="actions">
+        {% for it in items %}
+          <li class="action prio-{{ it.priority|default('medium') }}">
+            <div class="action-head">
+              <span class="prio">{{ it.priority|default('?') }}</span>
+              <span class="action-text">{{ it.action }}</span>
+            </div>
+            <div class="action-meta">
+              {% if it.rationale_barrier %}<span class="tag">barrier: {{ it.rationale_barrier }}</span>{% endif %}
+              {% if it.owner %}<span class="tag">owner: {{ it.owner }}</span>{% endif %}
+            </div>
+            {% if it.evidence %}
+              <div class="action-evidence">&#8627; {{ it.evidence }}</div>
+            {% endif %}
+            {% if it.recommended_resources %}
+              <div class="action-resources">
+                <span class="tag">Recommended Resources:</span>
+                <ul>
+                {% for res in it.recommended_resources %}
+                  <li><a href="{{ res.link }}" target="_blank">{{ res.name }}</a></li>
+                {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endfor %}
+{% endmacro %}

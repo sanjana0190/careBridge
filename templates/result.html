@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% from "_plan.html" import render_plan %}
+{% block title %}Plan for {{ patient.first }} {{ patient.last }}{% endblock %}
+{% block content %}
+  <h1>{{ patient.first }} {{ patient.last }}</h1>
+  <p class="subtitle">
+    {{ patient.age }}y · {{ patient.gender }} · {{ patient.city }} ·
+    income ${{ '{:,.0f}'.format(patient.income or 0) }} ·
+    {{ patient.ed_visits or 0 }} ED visits ·
+    {{ patient.chronic_condition_count or 0 }} chronic conditions
+    · turns: {{ conversation|length }}
+  </p>
+
+  {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+
+  <div class="grid">
+    <section>
+      <h2>Identified barriers ({{ barriers|length }})</h2>
+      <ul class="barriers">
+        {% for b in barriers %}
+          <li class="barrier sev-{{ b.severity }}">
+            <div class="barrier-head">
+              <span class="sev">{{ b.severity }}</span>
+              <span class="cat">{{ b.category }}</span>
+            </div>
+            <div class="barrier-summary">{{ b.summary }}</div>
+            {% if b.evidence %}
+              <ul class="evidence">
+                {% for e in b.evidence %}<li>{{ e }}</li>{% endfor %}
+              </ul>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+
+      {% if care_gaps %}
+        <h2>Care gaps</h2>
+        <ul class="gaps">
+          {% for g in care_gaps %}
+            <li class="gap prio-{{ g.priority }}">
+              <span class="prio">{{ g.priority }}</span>
+              {{ g.summary }}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </section>
+
+    <section>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>
+          Current plan
+          {% if conversation %}<span class="badge">revised {{ conversation|length }}×</span>{% endif %}
+        </h2>
+        <button id="download-pdf-btn" class="download-btn">
+          <svg style="width:16px;height:16px;margin-right:4px;vertical-align:-3px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Download PDF
+        </button>
+      </div>
+      <div id="plan-to-download">
+        {{ render_plan(plan) }}
+      </div>
+    </section>
+  </div>
+
+  <section class="chat">
+    <h2>Chat with the agent</h2>
+    <p class="subtitle">
+      Flag problems, share local knowledge, ask for changes. The agent
+      revises the plan after each message.
+    </p>
+
+    {% if conversation %}
+      <div class="chat-history">
+        {% for turn in conversation %}
+          <div class="chat-turn">
+            <div class="chat-msg coord">
+              <span class="who">Coordinator</span>
+              <div class="text">{{ turn.coordinator }}</div>
+            </div>
+            <div class="chat-msg agent">
+              <span class="who">Agent</span>
+              <div class="text">{{ turn.agent_response or "(plan revised)" }}</div>
+              {% if turn.personalization_notes %}
+                <ul class="changes">
+                  {% for n in turn.personalization_notes %}<li>{{ n }}</li>{% endfor %}
+                </ul>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% set suggestions = plan.coordinator_questions or [] %}
+    {% if suggestions %}
+      <div class="suggestions">
+        <span class="suggestions-label">Agent wants to know:</span>
+        {% for q in suggestions %}
+          <button type="button" class="suggestion" data-text="{{ q }}">{{ q }}</button>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('chat') }}" class="chat-form">
+      <input type="hidden" name="draft_id" value="{{ draft_id }}">
+      <textarea
+        id="message"
+        name="message"
+        rows="4"
+        placeholder="e.g. The patient's daughter only drives her on Tuesdays — adjust the appointment recommendation."
+        autofocus
+        required
+      ></textarea>
+      <div class="chat-actions">
+        <button type="submit" class="primary">Send</button>
+        <button type="submit" form="done-form" class="secondary">Save & finish</button>
+      </div>
+    </form>
+    <form id="done-form" method="post" action="{{ url_for('done') }}" style="display:none">
+      <input type="hidden" name="draft_id" value="{{ draft_id }}">
+    </form>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+      document.querySelectorAll('.suggestion').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const ta = document.getElementById('message');
+          ta.value = (ta.value ? ta.value + '\n\n' : '') + btn.dataset.text;
+          ta.focus();
+        });
+      });
+      document.getElementById('download-pdf-btn').addEventListener('click', function() {
+        const element = document.getElementById('plan-to-download');
+        const opt = {
+          margin:       0.5,
+          filename:     'Care_Plan.pdf',
+          image:        { type: 'jpeg', quality: 0.98 },
+          html2canvas:  { scale: 2, useCORS: true },
+          jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+      });
+    </script>
+  </section>
+
+  <section class="trace">
+    <h2>Agent interaction log</h2>
+    <pre>{% for line in log %}{{ line }}
+{% endfor %}</pre>
+  </section>
+{% endblock %}
